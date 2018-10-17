@@ -17,7 +17,7 @@ counter = np.zeros((lx, ly))
 
 for x in range(lx):
     for y in range(ly):
-        land[x][y] = float(I * y)
+        land[x, y] = float(I * y)
 
 def perform_avalanches(l):
     avalanches = False
@@ -41,7 +41,7 @@ def perform_avalanches(l):
         l = land_tmp
 
     return l
-
+        
 for iter in range(max_iters):
 
     print("Iteration: " + str(iter))
@@ -57,8 +57,8 @@ for iter in range(max_iters):
         counter[xi][yi] += 1
         p = []
         h_curr = land[xi, yi]
-        dx1 = h_curr - land[(xi + 1) % lx][yi]
-        dx2 = h_curr - land[(xi - 1) % lx][yi]    
+        dx1 = h_curr - land[(xi + 1) % lx, yi]
+        dx2 = h_curr - land[(xi - 1) % lx, yi]    
         dy2 = h_curr - land[xi][yi -1]
         dy1 = 0
 
@@ -67,7 +67,7 @@ for iter in range(max_iters):
         elif yi == ly - 1:
             dy1 = 0
         else:
-            dy1 = h_curr - land[xi][yi + 1]
+            dy1 = h_curr - land[xi, yi + 1]
         if dx1 > 0:
             p.append(E * dx1)
         else:
@@ -106,10 +106,9 @@ for iter in range(max_iters):
         land[w] -= D
 
     print(land)
-    perform_avalanches(land)       
+    land = perform_avalanches(land)       
     print(land)
-
-    
+   
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
