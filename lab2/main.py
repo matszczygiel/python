@@ -1,23 +1,119 @@
-import numpy as np 
+import numpy as np
+import scipy
 import random
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+import operator
 
-lx = 10
-ly = 10
+lx = 300
+ly = 200
 
 I = 1
 D = 10
 E = 0.05
-M = 5
-R = 20
+M = 200
+R = 100
 
-max_iters = 5
+max_iters = 20001
 
 land = np.zeros((lx, ly))
-counter = np.zeros((lx, ly))
 
 for x in range(lx):
     for y in range(ly):
         land[x, y] = float(I * y)
+
+
+def find_counter(land):
+    counter = np.zeros((lx, ly))
+    for x in range(lx):
+        for y in range(ly):
+            xi = x
+            yi = y
+            counter[xi, yi] += 1
+            while(True):
+                if yi == 0:
+                    break
+
+                h_curr = land[xi, yi]
+                dx1 = h_curr - land[(xi + 1) % lx, yi]
+                dx2 = h_curr - land[(xi - 1) % lx, yi]    
+                dy2 = h_curr - land[xi, yi -1]
+                dy1 = 0
+
+                if yi == ly - 1:
+                    dy1 = -1
+                else:
+                    dy1 = h_curr - land[xi, yi + 1]
+
+                llist = [dx1, dx2, dy1, dy2]
+
+                index = 0
+                val = llist[0]
+                equal = [0]
+                for i in range(1, 4):
+                    if llist[i] > val:
+                        index = i
+                        val = llist[i]
+                        equal = [i]
+                    elif llist[i] == val:
+                        equal.append(i)
+
+                index = random.choice(equal)
+
+                if index == 0:
+                    xi = (xi + 1) % lx
+                elif index == 1:
+                    xi = (xi - 1) % lx 
+                elif index == 2:
+                    yi += 1
+                else:
+                    yi -= 1
+
+                counter[xi, yi] += 1
+    
+    return counter
+
+
+
+def find_rivers(land):
+    counter = find_counter(land)
+    rivers = []
+    for x in range(lx):
+        for y in range(ly):
+            if counter[x, y] > R:
+                rivers.append((x, y))
+
+    return rivers
+
+
+
+def plot_rivers(riv, iter):
+    plt.clf()
+    F = plt.gcf()
+    a = plt.gca()
+    plt.xlim((0, lx))
+    plt.ylim((0, ly))
+
+    for x in riv:
+        cir = Circle(x, radius=0.5,color='black')
+        a.add_patch(cir)
+
+    plt.plot()                                         
+    F.set_size_inches((lx / 50, ly / 50))
+    nStr=str(iter)
+    nStr=nStr.rjust(6, '0') 
+    plt.savefig('rivers' + nStr + '.png')  
+
+
+def plot_land(lnd, iter):
+    plt.clf()
+    fig, ax = plt.subplots()
+    im = ax.imshow(np.transpose(land), origin='lower')
+    plt.colorbar(im)
+    nStr=str(iter)
+    nStr=nStr.rjust(6, '0') 
+    plt.savefig('land' + nStr + '.png')
+
 
 def perform_avalanches(l):
     avalanches = False
@@ -42,6 +138,7 @@ def perform_avalanches(l):
 
     return l
         
+
 for iter in range(max_iters):
 
     print("Iteration: " + str(iter))
@@ -51,84 +148,78 @@ for iter in range(max_iters):
 
     print("drop at: " + str(xi) + " " + str(yi))
 
-    wet = [(xi, yi)]
+    wet = np.zeros((lx, ly))
+    wet[xi, yi] = 1
 
     while(True):
-        counter[xi][yi] += 1
+        if yi == 0:
+            break
+
         p = []
         h_curr = land[xi, yi]
         dx1 = h_curr - land[(xi + 1) % lx, yi]
         dx2 = h_curr - land[(xi - 1) % lx, yi]    
-        dy2 = h_curr - land[xi][yi -1]
+        dy2 = h_curr - land[xi, yi -1]
         dy1 = 0
 
-        if yi == 0:
-            break
-        elif yi == ly - 1:
-            dy1 = 0
+        if yi == ly - 1:
+            dy1 = -1
         else:
             dy1 = h_curr - land[xi, yi + 1]
-        if dx1 > 0:
-            p.append(E * dx1)
+
+        if dx1 >= 0:
+            p.append(scipy.exp(E * dx1))
         else:
             p.append(0)
 
-        if dx2 > 0:
-            p.append(E * dx2)
+        if dx2 >= 0:
+            p.append(scipy.exp(E * dx2) + p[0])
         else:
-            p.append(0)
-        if dy1 > 0:
-            p.append(E * dy1)
-        else:
-            p.append(0)
-        if dy2 > 0:
-            p.append(E * dy2)
-        else:
-            p.append(0)
+            p.append(p[0])
 
-        p_tot = np.sum(p)
+        if dy1 >= 0:
+            p.append(scipy.exp(E * dy1) + p[1])
+        else:
+            p.append(p[1])
+
+        if dy2 >= 0:
+            p.append(scipy.exp(E * dy2) + p[2])
+        else:
+            p.append(p[2])
+
+        p_tot = p[3]
         for i in range(4):
             p[i] /= p_tot
+
+#        print(dx1, dx2, dy1, dy2)
+#        print(p)
+
 
         rand = random.random()
         if p[0] > rand:
             xi = (xi + 1) % lx
-        elif np.sum(p[0:2]) > rand:
+        elif p[1] > rand:
             xi = (xi - 1) % lx 
-        elif np.sum(p[0:3]) > rand:
+        elif p[2] > rand:
             yi += 1
         else:
             yi -= 1
 
-        wet.append((xi, yi))
+        wet[xi, yi] = 1
 
-    for w in wet:
-        land[w] -= D
+    land[wet == 1] -=D
 
-    print(land)
+#    print(land)
     land = perform_avalanches(land)       
-    print(land)
-   
+#    print(land)
 
-import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
-plt.clf()
-F = plt.gcf()
-a = plt.gca()
-plt.xlim((0, lx))
-plt.ylim((0, ly))
+    if iter % 1000 == 0:
+        print("finding rivers")
+        rivers = find_rivers(land)
+        print("ploting")
+        plot_rivers(rivers, iter)
+        plot_land(land, iter)
 
-for x in range(lx):
-    for y in range(ly):
-        if counter[x][y] > R:
-            cir = Circle((x, y), radius=0.5,color='black')
-            a.add_patch(cir)
 
-plt.plot()                                         
-F.set_size_inches((10, 10))
-plt.savefig('rivers.png')  
 
-plt.clf()
-fig, ax = plt.subplots()
-im = ax.imshow(np.transpose(land), origin='lower')
-plt.savefig('land.png')
+
