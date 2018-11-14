@@ -5,8 +5,7 @@ import matplotlib.cm as cm
 nx = 520
 ny = 180
 u0 = 0.04
-Re = 220
-
+Re = 1000
 vis = u0 * ny / float(Re * 2)
 tau = 3 * vis + 0.5
 q = 9
@@ -64,7 +63,9 @@ while time < max_time:
     
     if (time%100==0): 
         plt.clf()
+        nStr = str(time/100)
+        nStr=nStr.rjust(7, '0')
         plt.imshow(np.sqrt(u[0]**2 + u[1]**2).transpose(), cmap=cm.Reds)
-        plt.savefig("vel."+str(time/100).zfill(4)+".png")
+        plt.savefig("vel."+nStr+".png")
 
     time += 1
