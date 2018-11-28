@@ -9,10 +9,12 @@ max_t = 40
 
 m = 0.3
 v0 = 0.4
+d = 30
 x0  = -100
 sig = 10
-E0 = v0
+e = 1.5
 
+folder = "p3"
 
 kin = 3.81
 hbar = 0.6582
@@ -21,13 +23,16 @@ mtoh = 0.0864
 #potential
 def pot(x):
     if x < 0:
-        return 0. 
+        return 0.
+    elif x > d:
+        return 0.
     else:
         return v0
 
 
 V = np.vectorize(pot)
 
+E0 = e*v0 
 k0 = np.sqrt(2*m*mtoh*E0 / hbar)
 xgrid, dx = np.linspace(xmin, xmax, num=N, endpoint=True, retstep=True, dtype=float)
 psi = np.exp(- (xgrid - x0)**2 / 2. / sig**2) * np.exp(1j * k0 * xgrid)
@@ -45,8 +50,7 @@ U = makeU()
 
 time = 0.
 
-folder = "p2"
-name = folder + "/e" + str(E0) + "psi"
+name = folder + "/e" + str(round(e, 2)) + "psi"
 nStr = str(int(time*100))
 nStr=nStr.rjust(5, '0')
 plt.plot(xgrid, np.absolute(psi))
@@ -59,12 +63,6 @@ while time < max_t:
     time = round(time, 2)
     print("time: " + str(time))    
     psi = U @ psi
-    #psi = newpsi.copy()
-    #plt.hlines(e[0:lowest], a, b)
-    #
-    #for i in range(lowest):
-    #    plt.plot(grid, np.ones(N)*e[i] + 0.8 * v0 * v[:,i] / np.amax(abs(v[:,i]))  )
-
 
     plt.clf()
     nStr = str(int(time*100))
