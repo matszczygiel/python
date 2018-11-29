@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -5,23 +6,24 @@ import scipy.sparse
 import scipy
 
 
-dt = 0.1    #time step in fs
-Nx = 40
-Ny = 30
+
+dt = 0.001    #time step in fs
+Nx = 400
+Ny = 300
 xmin = -20
 xmax = 20
 ymin = -15
 ymax = 15
 max_t = 40
 
-Nh = 4
+Nh = 1
 
 m = 1.
 v0 = 0.5
 r = 4.
 x0  = -10
 y0 = 0.
-sig = 4.
+sig = 2.
 e = 1.
 
 folder = "1"
@@ -32,10 +34,11 @@ mtoh = 0.0864
 
 #potential
 def pot(x, y):
-    if x**2+y**2 < r**2:
-        return v0
-    else:
-        return 0.
+#    if x**2+y**2 < r**2:
+#        return v0
+#    else:
+#        return 0.
+    return 0.
 
 
 Vvec = np.vectorize(pot)
@@ -102,13 +105,13 @@ def makeH():
 time = 0.
 
 name = folder + "/e" + str(round(e, 2)) + "psi"
-nStr = str(int(time*100))
+nStr = str(int(time*1000))
 nStr=nStr.rjust(5, '0')
 #plt.savefig(name+nStr+".png")
 psimat = np.mat(np.absolute(psi))
-psimat = np.transpose(psimat.reshape((Nx, Ny)))
+psimat = np.transpose( psimat.reshape((Nx, Ny)) )
 psimax = abs(psimat).max()
-psimin = abs(psimat).min()
+psimin = 0.
 plt.imshow(psimat, interpolation='bilinear',
                origin='lower', extent=[xmin, xmax, ymin, ymax],
                vmax=psimax, vmin=psimin)
@@ -118,26 +121,24 @@ plt.savefig(name+nStr+".png")
 H = makeH()
 
 def propagate(ps):
-    res = ps
-    temp = ps
-    for n in range(1, Nh):
-        temp = H.dot(temp) / n * (-1j * dt / hbar)
-        res +=temp
+    res = ps.copy()
+    for n in range(1, Nh+1):
+        res = ps.copy() + (-1j * dt ) * H.dot(res)/ (n * hbar)
     return res
 
 
 while time < max_t:
     time += dt
-    time = round(time, 2)
+    time = round(time, 3)
     print("time: " + str(time))    
 
     psi = propagate(psi)
 
     plt.clf()
-    nStr = str(int(time*100))
+    nStr = str(int(time*1000))
     nStr=nStr.rjust(5, '0')
     psimat = np.mat(np.absolute(psi))
-    psimat = np.transpose(psimat.reshape((Nx, Ny)))
+    psimat = np.transpose( psimat.reshape((Nx, Ny)) )
     plt.imshow(psimat, interpolation='bilinear',
                    origin='lower', extent=[xmin, xmax, ymin, ymax],
                    vmax=psimax, vmin=psimin)
