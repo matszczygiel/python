@@ -8,17 +8,17 @@ import scipy.sparse.linalg
 import scipy.linalg
 
 dt = 0.1    #time step in fs
-Nx = 100
-Ny = 75
-xmin = -20
-xmax = 20
-ymin = -15
-ymax = 15
+Nx = 160
+Ny = 160
+xmin = -40
+xmax = 40
+ymin = -40
+ymax = 40
 max_t = 40
 
-Nh = 5
+Nh = 100
 
-time_mult = 100
+time_mult = 10
 
 m = 1.
 v0 = 0.5
@@ -26,9 +26,9 @@ r = 4.
 x0  = -10.
 y0 = 0.
 sig = 4.
-e = 10.
+e = 1.
 
-folder = "1"
+folder = "3"
 
 kin = 3.81
 hbar = 0.6582
@@ -36,11 +36,11 @@ mtoh = 0.0864
 
 #potential
 def pot(x, y):
-#    if x**2+y**2 < r**2:
-#        return v0
-#    else:
-#        return 0.
-    return 0.
+    if x**2+y**2 < r**2:
+        return v0
+    else:
+        return 0.
+#    return 0.
 
 
 Vvec = np.vectorize(pot)
@@ -58,29 +58,19 @@ psiy *= np.sqrt(1. / sig / np.sqrt(np.pi))
 psi = np.kron(psix, psiy)
 
 def makeH():
-    tx0 = kin *  2. / (m * dx**2)
-    tx1 = - kin / ( m * dx**2)
-    ty0 = kin *  2. / (m * dy**2)
-    ty1 = - kin / ( m * dy**2)
-    res0 = np.full((Nx*Ny), tx0 * ty0)
+    t0 = kin *  (2. / m) * (1. / dx**2 + 1. / dy**2)
+    tNx = - kin / ( m * dx**2)
+    t1 = - kin / ( m * dy**2)
+    res0 = np.full((Nx*Ny), t0)
     respot = np.empty(0)
     for x in range(Nx):
         respot = np.append(respot, Vvec(xgrid[x], ygrid))
     res0 += respot
-    res1 = np.full((Nx*Ny-1), tx0 * ty1)
-    for i in range(1, Nx):
-        res1[Ny*i-1] = 0.
-    res2 = np.full((Nx*Ny-Ny+1), tx1 * ty1)
-    for i in range(0, Nx):
-        res2[Ny*i] = 0.
-    res3 = np.full((Nx*Ny-Ny), tx1 * ty0)
-    res4 = np.full((Nx*Ny-Ny-1), tx1 * ty1)
-    for i in range(1, Nx-1):
-        res4[Ny*i-1] = 0.
-
+    res1 = np.full((Nx*Ny-1), t1)
+    resNx = np.full((Nx*Ny - Nx), tNx)
     return scipy.sparse.diags(
-                [res0, res1, res1, res2, res2, res3, res3, res4, res4],
-                [0, 1, -1, Ny-1, -(Ny-1), Ny, -Ny, Ny+1, -(Ny+1)], 
+                [res0, res1, res1, resNx, resNx],
+                [0, 1, -1, Nx, -Nx], 
                 shape=(Nx*Ny, Nx*Ny), format='dia')
 
     
