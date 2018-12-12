@@ -16,10 +16,10 @@ KtoH = 3.1668114e-6
 Rmax = 50
 R0 = 9.5
 
-mu = 1/ (1 / m39 + 1 / m39)
+mu = 1/ (1 / m40 + 1 / m40)
 lmax = 6
 
-loge = -0.45
+loge = -0.6
 
 E = 10**loge
 e = E * KtoH

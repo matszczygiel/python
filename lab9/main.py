@@ -16,16 +16,15 @@ KtoH = 3.1668114e-6
 Rmax = 50
 R0 = 9.5
 
-mu = 1/ (1 / m40 + 1 / m39)
+mu = 1/ (1 / m40 + 1 / m40)
 lmax = 6
 
-ens = np.linspace(-6, 0, num=1000, dtype=float)
-Ens = 10**ens
+ens = np.linspace(-6, 0, num=1000)
 sigtot = np.zeros(len(ens))
 sig = np.zeros((len(ens), lmax+1))
 
-for i in range(len(Ens)):
-    E = Ens[i]
+for loge in range(len(ens)):
+    E = 10**ens[loge]
     e = E * KtoH
     kk = np.sqrt(2*e)
     
@@ -72,17 +71,19 @@ for i in range(len(Ens)):
     psi = np.empty(lmax+1, dtype=object)
     
     for l in range(lmax+1):
-        r[l], psi[l], sig[i,l] = numerov(l)
+        r[l], psi[l], sig[loge,l] = numerov(l)
     
-    sigtot[i] = np.sum(sig[i])
+    sigtot[loge] = np.sum(sig[loge])
 
-plt.xscale('log')
-plt.yscale('log')
-plt.plot(Ens, sigtot, label="total")
-for l in range(1):
-    ls = str(l)
-    plt.plot(ens, sig[:,l], label="l = "+ls)
-plt.legend()
+plt.plot(ens, sigtot)
+#for l in range(1):
+#    plt.plot(ens, sig[:,l])
 plt.savefig("crosssection.png")
+
+plt.clf()
+plt.plot(sig[:,0])
+plt.plot(sig[:,1])
+plt.savefig("crosspartial.png")
+    
 
 
