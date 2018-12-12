@@ -53,10 +53,10 @@ def numerov(l):
             psi[i+1] = psi[i] * fn
 
     F = psi[-1] / psi[-2]
-    jnm = spherical_jn(l, kk*r[-2]) 
-    jn = spherical_jn(l, kk*r[-1]) 
-    ynm = spherical_yn(l, kk*r[-2]) 
-    yn = spherical_yn(l, kk*r[-1])
+    jnm = r[-2]* spherical_jn(l, kk*r[-2]) 
+    jn = r[-1] * spherical_jn(l, kk*r[-1]) 
+    ynm = r[-2] * spherical_yn(l, kk*r[-2]) 
+    yn = r[-1] * spherical_yn(l, kk*r[-1])
     K = (F*jnm  - jn) / (yn - F*yn)
     delta = np.arctan(-K)
     sigma = np.pi / (2*e) * (2*l+1) * np.sin(delta)**2

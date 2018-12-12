@@ -16,12 +16,12 @@ KtoH = 3.1668114e-6
 Rmax = 50
 R0 = 9.5
 
-mu = 1/ (1 / m40 + 1 / m40)
+mu = 1/ (1 / m39 + 1 / m40)
 lmax = 6
 
 E = 1.e-2
 e = E * KtoH
-kk = np.sqrt(2*e)
+kk = np.sqrt(2*mu*e)
 
 lamb = np.linspace(0.95, 1.05, num=1000)
 sigtot = np.zeros(len(lamb))
@@ -55,13 +55,13 @@ for i in range(len(lamb)):
                 psi[i+1] = psi[i] * fn
 
         F = psi[-1] / psi[-2]
-        jnm = spherical_jn(l, kk*r[-2]) 
-        jn = spherical_jn(l, kk*r[-1]) 
-        ynm = spherical_yn(l, kk*r[-2]) 
-        yn = spherical_yn(l, kk*r[-1])
-        K = (F*jnm  - jn) / (yn - F*yn)
-        delta = np.arctan(-K)
-        sigma = np.pi / (2*e) * (2*l+1) * np.sin(delta)**2
+        jnm = kk*r[-2] * spherical_jn(l, kk*r[-2]) 
+        jn  = kk*r[-1] * spherical_jn(l, kk*r[-1]) 
+        ynm = kk*r[-2] * spherical_yn(l, kk*r[-2]) 
+        yn  = kk*r[-1] * spherical_yn(l, kk*r[-1])
+        K = (F*jnm  - jn) / (yn - F*ynm)
+        s = (1+1j*K) / (1-1j*K)
+        sigma = 4*np.pi / kk**2 * (2*l+1) * np.abs(1-s)**2
         return r, psi, sigma
 
 
@@ -74,8 +74,10 @@ for i in range(len(lamb)):
 
     sigtot[i] = np.sum(sig)
 
-plt.plot(lamb, sigtot)
-#for l in range(1):
-#    plt.plot(ens, sig[:,l])
+plt.plot(lamb, sigtot, label="total")
+for l in range(lmax+1):
+    ls = str(l)
+    plt.plot(ens, sig[:,l], label="l = "+ls)
+plt.legend()
 plt.savefig("cross10mk.png")
 
