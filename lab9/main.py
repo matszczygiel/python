@@ -23,7 +23,7 @@ R0 = 9.5
 mu = 1/ (1 / mLi + 1 / mRb)
 lmaximal = 10
 
-e = 1.0*10**(-6) * KtoH
+e = 100.0*10**(-6) * KtoH
 
 def pot_int(x):
     return De * ((Re/x)**12 - 2* (Re/x)**6)
@@ -82,29 +82,35 @@ def numerov(e, lmax,  F):
     S = npl.inv(np.identity(lmax+1) - 1j*K) @ (np.identity(lmax+1) + 1j*K)
     sigma_el = np.pi / kk**2 * np.abs(1-np.diagonal(S))**2
     sigma_in = np.pi / kk**2 * (1 - np.abs(np.diagonal(S)))**2
-    sc_length = 1. / (1j *kk) * (1 - np.diagonal(S)) / (1 + np.diagonal(S)) 
+    sc_length = np.real(1. / (1j *kk) * (1 - np.diagonal(S)) / (1 + np.diagonal(S))) 
     
     return sigma_el, sigma_in, sc_length
     
-Fs = np.linspace(0, 10, num=50, dtype=float) * mvcmtoau
-sig_el = np.empty(len(Fs), dtype=object)
-sig_in = np.empty(len(Fs), dtype=object)
-sc_len = np.empty(len(Fs), dtype=object)
+Fs = np.linspace(0, 10, num=150, dtype=float) * mvcmtoau
+sig_el = np.empty((len(Fs), lmaximal+1), dtype=float)
+sig_in = np.empty((len(Fs), lmaximal+1), dtype=float)
+sc_len = np.empty((len(Fs), lmaximal+1), dtype=float)
 for f in range(len(Fs)):
     print(Fs[f])
-    sig_el[f], sig_in[f], sc_len[f] = numerov(e, lmaximal, Fs[f]) 
+    sig_el[f,:], sig_in[f,:], sc_len[f,:] = numerov(e, lmaximal, Fs[f]) 
 
+plt.clf()
 plt.xscale('log')
 plt.plot(Fs, sig_el[:,0], label="elastic")
+plt.legend()
+plt.savefig("cs_elastic100.png")
+
+plt.clf()
+plt.xscale('log')
 plt.plot(Fs, sig_in[:,0], label="inelastic")
 plt.legend()
-plt.savefig("crosssection.png")
+plt.savefig("cs_inelastic100.png")
 
-plt.xscale('log')
 plt.clf()
+plt.xscale('log')
 plt.plot(Fs, sc_len[:,0], label="scatering length")
 plt.legend()
-plt.savefig("sc_lenght.png")
+plt.savefig("sc_lenght100.png")
 
 
 
