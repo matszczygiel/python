@@ -23,7 +23,7 @@ R0 = 9.5
 mu = 1/ (1 / mLi + 1 / mRb)
 lmaximal = 3
 
-e = 1. *10**(-6) * KtoH
+e = 1.0*10**(-6) * KtoH
 
 def pot_int(x):
     return De * ((Re/x)**12 - 2* (Re/x)**6)
@@ -56,14 +56,15 @@ def numerov(e, lmax,  F):
     psi[1,:,:] = np.identity(lmax+1) 
 
     for i in range(1, len(r)-1):
-        print(i)
         if i != 1:
-            fnm = psi[i,:,:] @ npl.inv(psi[i-1,:,:])
-            fn =  npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12) -(np.identity(lmax+1)+dr**2*k2[i-1,:,:]/12) @ npl.inv(fnm) )
-            psi[i+1,:,:] = psi[i,:,:] @ fn
+            fnm_inv = psi[i-1,:,:] @ npl.inv(psi[i,:,:])
+            fn =  (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12) -(np.identity(lmax+1)+dr**2*k2[i-1,:,:]/12) @ fnm_inv )
+            fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ fn
+            psi[i+1,:,:] = fn @ psi[i,:,:] 
         else:
-            fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12))
-            psi[i+1,:,:] = psi[i,:,:] * fn
+            fn = (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12))
+            fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ fn
+            psi[i+1,:,:] = fn @ psi[i,:,:]
 
     Flast = psi[-1,:,:] @ npl.inv(psi[-2,:,:])
     kk = np.sqrt(2*e)
@@ -84,7 +85,7 @@ def numerov(e, lmax,  F):
     
     return sigma_el, sigma_in
     
-Fs = np.linspace(0, 10, num=25, dtype=float) * mvcmtoau
+Fs = np.linspace(0, 10, num=50, dtype=float) * mvcmtoau
 sig_el = np.empty(len(Fs), dtype=object)
 sig_in = np.empty(len(Fs), dtype=object)
 for f in range(len(Fs)):
