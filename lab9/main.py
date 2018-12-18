@@ -21,7 +21,7 @@ Rmax = 50
 R0 = 9.5
 
 mu = 1/ (1 / mLi + 1 / mRb)
-lmaximal = 3
+lmaximal = 10
 
 e = 1.0*10**(-6) * KtoH
 
@@ -45,7 +45,7 @@ def w_term(lmax, x, F):
     return res
 
 def k_sqrt(x, lmax, e, F):
-    return 2 * mu * (np.identity(lmax+1) - w_term(lmax, x, F))
+    return 2 * mu * (np.identity(lmax+1) * e - w_term(lmax, x, F))
 
 def numerov(e, lmax,  F):
     dr = 2 * np.pi / np.sqrt(k_sqrt(np.array([Re]), 0, e, F)[0, 0, 0]) / 50
@@ -57,17 +57,10 @@ def numerov(e, lmax,  F):
 
     for i in range(1, len(r)-1):
         if i != 1:
-<<<<<<< HEAD
             fnm_inv = psi[i-1,:,:] @ npl.inv(psi[i,:,:])
             fn =  (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12) -(np.identity(lmax+1)+dr**2*k2[i-1,:,:]/12) @ fnm_inv )
             fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ fn
             psi[i+1,:,:] = fn @ psi[i,:,:] 
-=======
-            fnm = psi[i,:,:] @ npl.inv(psi[i-1,:,:])
-            fn = 2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12) -(np.identity(lmax+1)+dr**2*k2[i-1,:,:]/12) @ npl.inv(fnm)
-            fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ fn 
-            psi[i+1,:,:] = psi[i,:,:] @ fn
->>>>>>> 626d567332c296a6cbe2ca46e3ce651c705943c4
         else:
             fn = (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12))
             fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ fn
@@ -89,19 +82,29 @@ def numerov(e, lmax,  F):
     S = npl.inv(np.identity(lmax+1) - 1j*K) @ (np.identity(lmax+1) + 1j*K)
     sigma_el = np.pi / kk**2 * np.abs(1-np.diagonal(S))**2
     sigma_in = np.pi / kk**2 * (1 - np.abs(np.diagonal(S)))**2
+    sc_length = 1. / (1j *kk) * (1 - np.diagonal(S)) / (1 + np.diagonal(S)) 
     
-    return sigma_el, sigma_in
+    return sigma_el, sigma_in, sc_length
     
 Fs = np.linspace(0, 10, num=50, dtype=float) * mvcmtoau
 sig_el = np.empty(len(Fs), dtype=object)
 sig_in = np.empty(len(Fs), dtype=object)
+sc_len = np.empty(len(Fs), dtype=object)
 for f in range(len(Fs)):
-    sig_el[f], sig_in[f] = numerov(e, lmaximal, Fs[f]) 
+    print(Fs[f])
+    sig_el[f], sig_in[f], sc_len[f] = numerov(e, lmaximal, Fs[f]) 
 
 plt.xscale('log')
-plt.plot(Fs, sig_el[0], label="elastic")
-plt.plot(Fs, sig_in[0], label="inelastic")
+plt.plot(Fs, sig_el[:,0], label="elastic")
+plt.plot(Fs, sig_in[:,0], label="inelastic")
 plt.legend()
 plt.savefig("crosssection.png")
+
+plt.xscale('log')
+plt.clf()
+plt.plot(Fs, sc_len[:,0], label="scatering length")
+plt.legend()
+plt.savefig("sc_lenght.png")
+
 
 
