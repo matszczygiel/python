@@ -59,7 +59,8 @@ def numerov(e, lmax,  F):
         print(i)
         if i != 1:
             fnm = psi[i,:,:] @ npl.inv(psi[i-1,:,:])
-            fn =  npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12) -(np.identity(lmax+1)+dr**2*k2[i-1,:,:]/12) @ npl.inv(fnm) )
+            fn = 2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12) -(np.identity(lmax+1)+dr**2*k2[i-1,:,:]/12) @ npl.inv(fnm)
+            fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ fn 
             psi[i+1,:,:] = psi[i,:,:] @ fn
         else:
             fn = npl.inv(np.identity(lmax+1)+ dr**2 * k2[i+1,:,:]/12) @ (2 * (np.identity(lmax+1)-5*dr**2 * k2[i,:,:]/12))
@@ -77,7 +78,7 @@ def numerov(e, lmax,  F):
     yn = np.zeros((lmax+1, lmax+1), dtype=float)
     for l in range(lmax+1): yn[l, l] = kk*r[-1]* spherical_yn(l, kk*r[-1]) 
 
-    K = npl.inv(Flast@ynm - yn) @ (jn - Flast@jnm)
+    K = npl.inv(Flast @ ynm - yn) @ (jn - Flast @ jnm)
     S = npl.inv(np.identity(lmax+1) - 1j*K) @ (np.identity(lmax+1) + 1j*K)
     sigma_el = np.pi / kk**2 * np.abs(1-np.diagonal(S))**2
     sigma_in = np.pi / kk**2 * (1 - np.abs(np.diagonal(S)))**2
