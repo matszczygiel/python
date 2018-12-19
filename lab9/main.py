@@ -23,7 +23,7 @@ R0 = 9.5
 mu = 1/ (1 / mLi + 1 / mRb)
 lmaximal = 10
 
-e = 100.0*10**(-6) * KtoH
+e = 10000.0*10**(-6) * KtoH
 
 def pot_int(x):
     return De * ((Re/x)**12 - 2* (Re/x)**6)
@@ -86,31 +86,33 @@ def numerov(e, lmax,  F):
     
     return sigma_el, sigma_in, sc_length
     
-Fs = np.linspace(0, 10, num=150, dtype=float) * mvcmtoau
+Fs = np.linspace(0, 10, num=150, dtype=float)
 sig_el = np.empty((len(Fs), lmaximal+1), dtype=float)
 sig_in = np.empty((len(Fs), lmaximal+1), dtype=float)
 sc_len = np.empty((len(Fs), lmaximal+1), dtype=float)
 for f in range(len(Fs)):
     print(Fs[f])
-    sig_el[f,:], sig_in[f,:], sc_len[f,:] = numerov(e, lmaximal, Fs[f]) 
+    sig_el[f,:], sig_in[f,:], sc_len[f,:] = numerov(e, lmaximal, Fs[f] * mvcmtoau) 
 
 plt.clf()
 plt.xscale('log')
+plt.yscale('log')
 plt.plot(Fs, sig_el[:,0], label="elastic")
 plt.legend()
-plt.savefig("cs_elastic100.png")
+plt.savefig("cs_elastic.png")
 
 plt.clf()
 plt.xscale('log')
+plt.yscale('log')
 plt.plot(Fs, sig_in[:,0], label="inelastic")
 plt.legend()
-plt.savefig("cs_inelastic100.png")
+plt.savefig("cs_inelastic.png")
 
 plt.clf()
 plt.xscale('log')
 plt.plot(Fs, sc_len[:,0], label="scatering length")
 plt.legend()
-plt.savefig("sc_lenght100.png")
+plt.savefig("sc_lenght.png")
 
 
 
