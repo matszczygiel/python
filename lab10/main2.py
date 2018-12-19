@@ -47,8 +47,8 @@ def get_H(A, gn, imult, B):
 
 gausstoau = 1. / 2.35e+9
 bfield = np.linspace(0, 2000, num=150, dtype=float)
-evals = np.empty((len(bfield)), dtype=object)
 stotvals = np.arange(-4.5, 4.51, step=0.5)
+evals = np.empty((len(bfield), len(stotvals)), dtype=object)
 
 SzLi = np.kron(get_spin_ops(ILimult)[0], np.identity(2)) + np.kron(np.identity(ILimult), get_spin_ops(2)[0])
 SzRb = np.kron(get_spin_ops(IRbmult)[0], np.identity(2)) + np.kron(np.identity(IRbmult), get_spin_ops(2)[0])
@@ -61,20 +61,20 @@ for i in range(1, len(bfield)):
     print(i)
     H = np.kron(get_H(ALi, gnLi, ILimult, bfield[i] * gausstoau), np.identity(IRbmult*2))
     H += np.kron(np.identity(ILimult*2), get_H(ARb, gnRb, IRbmult, bfield[i] * gausstoau))
-    ev = np.empty((len(stotvals)), dtype=object)
-    for s in range(len(stotvals)):
-        hblock = H[kom == stotvals[s]]
-        print(hblock)
-        if len(hblock) != 1:
-            ev[s] = npl.eigvalsh(hblock) / mhztoau
+    for s in range(1,len(stotvals)):
+        hblock = np.asmatrix(H[kom == stotvals[s]])
+        if len(hblock) > 1:
+            evals[i,s] = npl.eigvalsh(hblock) / mhztoau
         else:
-            ev[s] = hblock / mhztoau
-    evals[i] = ev
+            evals[i, s] = []
 
 for s in range(len(stotvals)):
     plt.clf()
-    for e in range(len(evals[0, s, :])):
-        plt.plot(bfield, evals[:, s, e])
+    ar = np.array(evals[0,s])
+    print(ar)
+
+    for e in range(len(ar)):
+        plt.plot(bfield, evals[:, s][e])
     plt.savefig("plot" + str(stotvals[s]) + ".png")
 #
 #ev, vecs = npl.eigh(H)
