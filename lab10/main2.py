@@ -48,33 +48,38 @@ def get_H(A, gn, imult, B):
 gausstoau = 1. / 2.35e+9
 bfield = np.linspace(0, 2000, num=150, dtype=float)
 stotvals = np.arange(-4.5, 4.51, step=0.5)
-evals = np.empty((len(bfield), len(stotvals)), dtype=object)
+scount = np.zeros(len(stotvals), dtype=int)
+evals = np.empty((len(stotvals)), dtype=object)
 
 SzLi = np.kron(get_spin_ops(ILimult)[0], np.identity(2)) + np.kron(np.identity(ILimult), get_spin_ops(2)[0])
 SzRb = np.kron(get_spin_ops(IRbmult)[0], np.identity(2)) + np.kron(np.identity(IRbmult), get_spin_ops(2)[0])
 Sztot = np.kron(SzLi, np.identity(IRbmult*2)) + np.kron(np.identity(ILimult*2), SzRb)
-H = np.kron(get_H(ALi, gnLi, ILimult, 0), np.identity(IRbmult*2))
-H += np.kron(np.identity(ILimult*2), get_H(ARb, gnRb, IRbmult, 0))
-kom = ( Sztot @ H ) / H
+Sdiag = np.diagonal(Sztot)
 
 for i in range(1, len(bfield)):
     print(i)
     H = np.kron(get_H(ALi, gnLi, ILimult, bfield[i] * gausstoau), np.identity(IRbmult*2))
     H += np.kron(np.identity(ILimult*2), get_H(ARb, gnRb, IRbmult, bfield[i] * gausstoau))
-    for s in range(1,len(stotvals)):
-        hblock = np.asmatrix(H[kom == stotvals[s]])
-        if len(hblock) > 1:
-            evals[i,s] = npl.eigvalsh(hblock) / mhztoau
+    for s in range(len(stotvals)):
+        egvs, vecs = npl.eigvalsh(hblock) 
+        egvs /= mhztoau
+        spins = np.diagonal(vecs.transpose() @ Sztot @ vecs) 
+            if i == 0:
+                evals[s] = np.zeros((len(bfield), len(egvs)), dtype=float)
+                scount[s] = len(egvs)
+            evals[s][i, :] = egvs
         else:
-            evals[i, s] = []
+            if i == 0:
+                evals[s] = np.zeros((len(bfield), 0), dtype=float)
+                scount[s] = 0
 
+print(scount)
 for s in range(len(stotvals)):
     plt.clf()
-    ar = np.array(evals[0,s])
-    print(ar)
 
-    for e in range(len(ar)):
-        plt.plot(bfield, evals[:, s][e])
+    for e in range(scount[s]):
+        plt.plot(bfield, evals[s][:, e])
+        print(s, e, evals[s][:, e])
     plt.savefig("plot" + str(stotvals[s]) + ".png")
 #
 #ev, vecs = npl.eigh(H)
